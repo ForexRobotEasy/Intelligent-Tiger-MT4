@@ -1,0 +1,110 @@
+
+//+------------------------------------------------------------------+
+//|                                            Intelligent Tiger MT4 |
+//|                             Developer's Site: forexroboteasy.com |
+//|                                      Development: Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <MovingAverages.mqh>
+#include <Stochastic.mqh>
+
+// Define constants
+#define SYMBOL 'EURUSD'                  // Symbol to trade
+#define LOTS 0.01                        // Lot size
+#define MAGIC_NUMBER 123456              // Unique identifier for the EA
+#define STOP_LOSS 100                    // Stop loss in points
+#define TAKE_PROFIT 200                  // Take profit in points
+
+// Initialize objects
+CTrade trade;
+CMovingAverages movingAverages;
+CStochastic stochastic;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   // Set EA parameters
+   trade.SetExpertMagicNumber(MAGIC_NUMBER);
+   trade.SetExpertStopLoss(STOP_LOSS);
+   trade.SetExpertTakeProfit(TAKE_PROFIT);
+
+   return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Perform any necessary cleanup tasks
+}
+
+//+------------------------------------------------------------------+
+//| Expert start function                                            |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Get current market data
+   double maValue = movingAverages.iMA(SYMBOL, PERIOD_CURRENT, 20, 0, MODE_SMA, PRICE_CLOSE, 0);
+   double upperBand = iBands(SYMBOL, PERIOD_CURRENT, 20, 2, 0, PRICE_CLOSE, MODE_UPPER, 0);
+   double lowerBand = iBands(SYMBOL, PERIOD_CURRENT, 20, 2, 0, PRICE_CLOSE, MODE_LOWER, 0);
+   double stochasticValue = stochastic.iStochastic(SYMBOL, PERIOD_CURRENT, 5, 3, 3, MODE_SMA, 0, MODE_MAIN, 0);
+
+   // Check for potential entry points
+   if (Close[1] > upperBand && Close < upperBand && stochasticValue > 80)
+   {
+      // Place a buy order
+      bool buyOrderPlaced = trade.Buy(LOTS);
+      
+      if (buyOrderPlaced)
+      {
+         // Add necessary comments and logging
+         Comment('Buy order placed at ', Ask);
+         Print('Buy order placed at ', Ask);
+      }
+   }
+
+   if (Close[1] < lowerBand && Close > lowerBand && stochasticValue < 20)
+   {
+      // Place a sell order
+      bool sellOrderPlaced = trade.Sell(LOTS);
+      
+      if (sellOrderPlaced)
+      {
+         // Add necessary comments and logging
+         Comment('Sell order placed at ', Bid);
+         Print('Sell order placed at ', Bid);
+      }
+   }
+
+   // Check for potential exit points
+   if (Close[1] < maValue && Close > maValue)
+   {
+      // Close any existing buy orders
+      trade.CloseBuyOrders();
+      
+      // Add necessary comments and logging
+      Comment('Buy orders closed at ', Bid);
+      Print('Buy orders closed at ', Bid);
+   }
+
+   if (Close[1] > maValue && Close < maValue)
+   {
+      // Close any existing sell orders
+      trade.CloseSellOrders();
+      
+      // Add necessary comments and logging
+      Comment('Sell orders closed at ', Ask);
+      Print('Sell orders closed at ', Ask);
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Custom functions                                                 |
+//+------------------------------------------------------------------+
+// Define custom functions for high precision order placement and open order system without a Stop Loss (SL) setting
+
